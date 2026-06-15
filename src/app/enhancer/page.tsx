@@ -6,16 +6,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Layout } from "lucide-react";
+import { Sparkles, Loader2, Layout, GitBranch } from "lucide-react";
 import CVOutput from "@/components/cv-output";
 import TemplateSelector from "@/components/template-selector";
+import GitHubFetcher from "@/components/github-fetcher";
 import { TemplateId } from "@/lib/templates";
+import type { GitHubRepo } from "@/lib/github";
 
 export default function EnhancerPage() {
   const [cvContent, setCvContent] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [enhancements, setEnhancements] = useState("");
   const [template, setTemplate] = useState<TemplateId>("professional");
+  const [githubRepos, setGithubRepos] = useState<GitHubRepo[]>([]);
   const [generating, setGenerating] = useState(false);
   const [output, setOutput] = useState("");
   const abortRef = useRef<AbortController | null>(null);
@@ -40,6 +43,7 @@ export default function EnhancerPage() {
           jobDescription: jobDescription.trim() || undefined,
           enhancements: enhancements.trim() || undefined,
           template,
+          githubRepos: githubRepos.length > 0 ? githubRepos : undefined,
         }),
         signal: abortRef.current.signal,
       });
@@ -148,6 +152,23 @@ B.S. Computer Science, MIT (2015-2019)`}
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <GitBranch className="w-5 h-5" /> GitHub Repositories (Optional)
+              </CardTitle>
+              <CardDescription>
+                Connect GitHub to include your open-source work in the enhanced CV
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <GitHubFetcher
+                selectedRepos={githubRepos}
+                onReposChange={setGithubRepos}
+              />
+            </CardContent>
+          </Card>
 
           <div className="flex justify-center">
             <Button size="lg" onClick={handleEnhance} disabled={generating || !cvContent.trim()} className="px-8">

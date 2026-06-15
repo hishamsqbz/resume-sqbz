@@ -9,8 +9,12 @@ const templatePrompts: Record<string, string> = {
 };
 
 export async function POST(request: NextRequest) {
-  const { cvContent, jobDescription, enhancements, template = "professional" } = await request.json();
+  const { cvContent, jobDescription, enhancements, template = "professional", githubRepos } = await request.json();
   const styleGuide = templatePrompts[template] || templatePrompts.professional;
+
+  const githubSection = githubRepos?.length
+    ? `\n\n## GitHub Projects\n${githubRepos.map((r: any) => `- ${r.name}: ${r.description || "N/A"} (${r.language || "N/A"})`).join("\n")}\n\nInclude these GitHub projects in the CV if relevant.`
+    : "";
 
   const prompt = `Enhance this CV. Use this EXACT structure:
 # Full Name
@@ -36,7 +40,7 @@ Original CV:
 ${cvContent}
 
 ${jobDescription ? `\nTarget Job:\n${jobDescription}` : ""}
-${enhancements ? `\nFocus: ${enhancements}` : ""}
+${enhancements ? `\nFocus: ${enhancements}` : ""}${githubSection}
 
 Output ONLY the enhanced CV markdown. No commentary.`;
 

@@ -96,8 +96,14 @@ CRITICAL: First line MUST be "# Name". Contact info goes right after. Use "### T
 };
 
 export async function POST(request: NextRequest) {
-  const { personalInfo, experience, education, skills, projects, template = "professional" } = await request.json();
+  const { personalInfo, experience, education, skills, projects, template = "professional", githubRepos } = await request.json();
   const styleGuide = templatePrompts[template] || templatePrompts.professional;
+  const ghUrl = personalInfo?.github || "";
+
+  const githubSection = githubRepos?.length
+    ? `\n## GitHub Projects (Open Source)
+${githubRepos.map((r: any) => `- ${r.name}: ${r.description || "No description"} [${r.language || "N/A"} | ${r.stargazers_count} stars]`).join("\n")}`
+    : "";
 
   const prompt = `Create a professional CV in markdown format from this information.
 
@@ -108,6 +114,7 @@ ${styleGuide}
 - Email: ${personalInfo.email}
 - Phone: ${personalInfo.phone}
 - LinkedIn: ${personalInfo.linkedin}
+- GitHub: ${ghUrl}
 - Summary: ${personalInfo.summary}
 
 ## Work Experience
@@ -121,7 +128,7 @@ ${education.map((edu: any, i: number) => `${i + 1}. Degree: ${edu.degree} | Fiel
 ${skills.map((s: string) => `- ${s}`).join("\n")}
 
 ## Projects
-${projects.map((proj: any, i: number) => `${i + 1}. ${proj.name}: ${proj.description} (${proj.technologies})`).join("\n")}
+${projects.map((proj: any, i: number) => `${i + 1}. ${proj.name}: ${proj.description} (${proj.technologies})`).join("\n")}${githubSection}
 
 Output ONLY the CV markdown. No extra commentary.`;
 

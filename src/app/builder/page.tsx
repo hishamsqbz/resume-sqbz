@@ -10,10 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Loader2, FileText, Layout, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Loader2, FileText, Layout, Eye, EyeOff, GitBranch } from "lucide-react";
 import CVOutput from "@/components/cv-output";
 import TemplateSelector from "@/components/template-selector";
+import GitHubFetcher from "@/components/github-fetcher";
 import { TemplateId } from "@/lib/templates";
+import type { GitHubRepo } from "@/lib/github";
 
 type Experience = {
   jobTitle: string;
@@ -49,8 +51,10 @@ export default function BuilderPage() {
     email: "",
     phone: "",
     linkedin: "",
+    github: "",
     summary: "",
   });
+  const [githubRepos, setGithubRepos] = useState<GitHubRepo[]>([]);
   const [experience, setExperience] = useState<Experience[]>([
     { jobTitle: "", company: "", startDate: "", endDate: "", description: "" },
   ]);
@@ -114,6 +118,7 @@ export default function BuilderPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           personalInfo, experience, education, skills: skillsList, projects, template,
+          githubRepos: githubRepos.length > 0 ? githubRepos : undefined,
         }),
         signal: abortRef.current.signal,
       });
@@ -176,11 +181,12 @@ export default function BuilderPage() {
       {!output ? (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex items-center justify-between mb-4">
-            <TabsList className="grid grid-cols-5 max-w-2xl">
+            <TabsList className="grid grid-cols-6 max-w-3xl">
               <TabsTrigger value="personal">Personal</TabsTrigger>
               <TabsTrigger value="experience">Experience</TabsTrigger>
               <TabsTrigger value="education">Education</TabsTrigger>
               <TabsTrigger value="skills">Skills</TabsTrigger>
+              <TabsTrigger value="github" className="flex items-center gap-1"><GitBranch className="w-3 h-3" />GitHub</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
             </TabsList>
             {filledFields.length > 0 && (
@@ -215,6 +221,10 @@ export default function BuilderPage() {
                   <div className="space-y-2">
                     <Label htmlFor="linkedin">LinkedIn URL</Label>
                     <Input id="linkedin" value={personalInfo.linkedin} onChange={(e) => setPersonalInfo({ ...personalInfo, linkedin: e.target.value })} placeholder="https://linkedin.com/in/johndoe" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="github">GitHub URL</Label>
+                    <Input id="github" value={personalInfo.github} onChange={(e) => setPersonalInfo({ ...personalInfo, github: e.target.value })} placeholder="https://github.com/johndoe" />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -361,6 +371,25 @@ export default function BuilderPage() {
                 <div className="flex justify-end">
                   <Button onClick={() => setActiveTab("projects")}>Next: Projects</Button>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="github" className="space-y-4 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GitBranch className="w-5 h-5" /> GitHub Repositories
+                </CardTitle>
+                <CardDescription>
+                  Connect your GitHub to automatically include your top repositories in the CV
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GitHubFetcher
+                  selectedRepos={githubRepos}
+                  onReposChange={setGithubRepos}
+                />
               </CardContent>
             </Card>
           </TabsContent>
